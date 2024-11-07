@@ -6,6 +6,21 @@ const jestConfig: JestConfigWithTsJest = {
   preset: 'ts-jest/presets/default-esm',
   extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
+  transform: {
+    '^.+\\.[tj]s$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true
+        }
+      },
+    ],
+  },
   collectCoverageFrom: [
     'packages/*/src/**/*.ts',
     '!packages/**/__tests__/**/*',
@@ -34,6 +49,7 @@ const jestConfig: JestConfigWithTsJest = {
     },
   },
   testMatch: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
+  setupFiles: ['<rootDir>/setup-jest.js'],
 };
 
 export default jestConfig;

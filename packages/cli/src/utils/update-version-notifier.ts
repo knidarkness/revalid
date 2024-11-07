@@ -1,12 +1,14 @@
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, writeFileSync, readFileSync, statSync } from 'fs';
 import { compare } from 'semver';
+import { fileURLToPath } from 'url';
 import fetch from './fetch-with-timeout.js';
 import { cyan, green, yellow } from 'colorette';
 import { cleanColors } from './miscellaneous.js';
 
-const __dirname = import.meta.dirname;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
 export const version = pkg?.version;
@@ -40,7 +42,7 @@ const getLatestVersion = async (packageName: string): Promise<string | undefined
   const latestUrl = `http://registry.npmjs.org/${packageName}/latest`;
   const response = await fetch(latestUrl);
   if (!response) return;
-  const info = await response.json();
+  const info = await response.json() as { version: string | undefined};
   return info.version;
 };
 
