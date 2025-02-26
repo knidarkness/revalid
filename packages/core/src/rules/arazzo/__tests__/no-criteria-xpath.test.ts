@@ -6,7 +6,7 @@ import { BaseResolver } from '../../../resolve';
 describe('Arazzo no-criteria-xpath', () => {
   const document = parseYamlToDocument(
     outdent`
-      arazzo: '1.0.0'
+      arazzo: '1.0.1'
       info:
         title: Cool API
         version: 1.0.0
@@ -90,7 +90,7 @@ describe('Arazzo no-criteria-xpath', () => {
               "source": "arazzo.yaml",
             },
           ],
-          "message": "The \`xpath\` type criteria is not supported by Spot.",
+          "message": "The \`xpath\` type criteria is not supported by Respect.",
           "ruleId": "no-criteria-xpath",
           "severity": "error",
           "suggest": [],
@@ -103,7 +103,7 @@ describe('Arazzo no-criteria-xpath', () => {
               "source": "arazzo.yaml",
             },
           ],
-          "message": "The \`xpath\` type criteria is not supported by Spot.",
+          "message": "The \`xpath\` type criteria is not supported by Respect.",
           "ruleId": "no-criteria-xpath",
           "severity": "error",
           "suggest": [],

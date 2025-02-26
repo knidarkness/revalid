@@ -1,18 +1,18 @@
 #!/usr/bin/env node
-
+import * as path from 'path';
+import * as dotenv from 'dotenv';
 import './utils/assert-node-version';
 import * as yargs from 'yargs';
 import * as colors from 'colorette';
-import { RedoclyClient } from '@redocly/openapi-core';
 import { outputExtensions, regionChoices } from './types';
 import { previewDocs } from './commands/preview-docs';
 import { handleStats } from './commands/stats';
 import { handleSplit } from './commands/split';
 import { handleJoin } from './commands/join';
-import { handlePushStatus } from './cms/commands/push-status';
+import { handlePushStatus } from './reunite/commands/push-status';
 import { handleLint } from './commands/lint';
 import { handleBundle } from './commands/bundle';
-import { handleLogin } from './commands/login';
+import { handleLogin, handleLogout } from './commands/auth';
 import { handlerBuildCommand } from './commands/build-docs';
 import {
   cacheLatestVersion,
@@ -28,10 +28,13 @@ import { commonPushHandler } from './commands/push';
 
 import type { Arguments } from 'yargs';
 import type { OutputFormat, RuleSeverity } from '@redocly/openapi-core';
+import type { GenerateArazzoFileOptions, RespectOptions } from '@redocly/respect-core';
 import type { BuildDocsArgv } from './commands/build-docs/types';
-import type { PushStatusOptions } from './cms/commands/push-status';
+import type { PushStatusOptions } from './reunite/commands/push-status';
 import type { PushArguments } from './types';
 import type { EjectOptions } from './commands/eject';
+
+dotenv.config({ path: path.resolve(process.cwd(), './.env') });
 
 if (!('replaceAll' in String.prototype)) {
   require('core-js/actual/string/replace-all');
@@ -605,22 +608,26 @@ yargs
   )
   .command(
     'login',
-    'Login to the Redocly API registry with an access token.',
+    'Log in to Redocly.',
     async (yargs) =>
       yargs.options({
         verbose: {
           description: 'Include additional output.',
           type: 'boolean',
         },
-        region: {
-          description: 'Specify a region.',
-          alias: 'r',
-          choices: regionChoices,
+        residency: {
+          description: 'Residency of the application. Defaults to `us`.',
+          alias: ['r', 'region'],
+          type: 'string',
         },
         config: {
           description: 'Path to the config file.',
           requiresArg: true,
           type: 'string',
+        },
+        next: {
+          description: 'Use Reunite application to login.',
+          type: 'boolean',
         },
       }),
     (argv) => {
@@ -632,13 +639,9 @@ yargs
     'logout',
     'Clear your stored credentials for the Redocly API registry.',
     (yargs) => yargs,
-    async (argv) => {
+    (argv) => {
       process.env.REDOCLY_CLI_COMMAND = 'logout';
-      await commandWrapper(async () => {
-        const client = new RedoclyClient();
-        client.logout();
-        process.stdout.write('Logged out from the Redocly account. ✋\n');
-      })(argv);
+      commandWrapper(handleLogout)(argv);
     }
   )
   .command(
@@ -862,6 +865,102 @@ yargs
     (argv) => {
       process.env.REDOCLY_CLI_COMMAND = 'eject';
       commandWrapper(handleEject)(argv as Arguments<EjectOptions>);
+    }
+  )
+  .command(
+    'respect [files...]',
+    'Run Arazzo tests.',
+    (yargs) => {
+      return yargs
+        .positional('files', {
+          describe: 'Test files or glob pattern.',
+          type: 'string',
+          array: true,
+          default: [],
+        })
+        .env('REDOCLY_CLI_RESPECT')
+        .options({
+          input: {
+            alias: 'i',
+            describe: 'Input parameters.',
+            type: 'string',
+          },
+          server: {
+            alias: 'S',
+            describe: 'Server parameters.',
+            type: 'string',
+          },
+          workflow: {
+            alias: 'w',
+            describe: 'Workflow name.',
+            type: 'string',
+            array: true,
+          },
+          skip: {
+            alias: 's',
+            describe: 'Workflow to skip.',
+            type: 'string',
+            array: true,
+          },
+          verbose: {
+            alias: 'v',
+            describe: 'Apply verbose mode.',
+            type: 'boolean',
+          },
+          'har-output': {
+            describe: 'Har file output name.',
+            type: 'string',
+          },
+          'json-output': {
+            describe: 'JSON file output name.',
+            type: 'string',
+          },
+          'client-cert': {
+            describe: 'Mutual TLS client certificate.',
+            type: 'string',
+          },
+          'client-key': {
+            describe: 'Mutual TLS client key.',
+            type: 'string',
+          },
+          'ca-cert': {
+            describe: 'Mutual TLS CA certificate.',
+            type: 'string',
+          },
+          severity: {
+            describe: 'Severity of the check.',
+            type: 'string',
+          },
+        });
+    },
+    async (argv) => {
+      process.env.REDOCLY_CLI_COMMAND = 'respect';
+      const { handleRun } = await import('@redocly/respect-core');
+      commandWrapper(handleRun)(argv as Arguments<RespectOptions>);
+    }
+  )
+  .command(
+    'generate-arazzo <descriptionPath>',
+    'Auto-generate arazzo description file from an API description.',
+    (yargs) => {
+      return yargs
+        .positional('descriptionPath', {
+          describe: 'Description file path.',
+          type: 'string',
+        })
+        .env('REDOCLY_CLI_RESPECT')
+        .options({
+          'output-file': {
+            alias: 'o',
+            describe: 'Output File name.',
+            type: 'string',
+          },
+        });
+    },
+    async (argv) => {
+      process.env.REDOCLY_CLI_COMMAND = 'generate-arazzo';
+      const { handleGenerate } = await import('@redocly/respect-core');
+      commandWrapper(handleGenerate)(argv as Arguments<GenerateArazzoFileOptions>);
     }
   )
   .completion('completion', 'Generate autocomplete script for `redocly` command.')

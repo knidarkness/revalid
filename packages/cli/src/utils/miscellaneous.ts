@@ -3,6 +3,7 @@ import { blue, gray, green, red, yellow } from 'colorette';
 import { performance } from 'perf_hooks';
 import * as glob from 'glob';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as readline from 'readline';
 import { Writable } from 'stream';
 import { execSync } from 'child_process';
@@ -28,7 +29,7 @@ import { deprecatedRefDocsSchema } from '@redocly/config/lib/reference-docs-conf
 import { outputExtensions } from '../types';
 import { version } from './update-version-notifier';
 import { DESTINATION_REGEX } from '../commands/push';
-import fetch, { DEFAULT_FETCH_TIMEOUT } from './fetch-with-timeout';
+import { getReuniteUrl } from '../reunite/api';
 
 import type { Arguments } from 'yargs';
 import type {
@@ -565,33 +566,32 @@ export async function sendTelemetry(
     } = argv;
     const event_time = new Date().toISOString();
     const redoclyClient = new RedoclyClient();
-    const logged_in = redoclyClient.hasTokens();
+    const { RedoclyOAuthClient } = await import('../auth/oauth-client');
+    const oauthClient = new RedoclyOAuthClient('redocly-cli', version);
+    const reuniteUrl = getReuniteUrl(argv.residency as string | undefined);
+    const logged_in = redoclyClient.hasTokens() || (await oauthClient.isAuthorized(reuniteUrl));
     const data: Analytics = {
       event: 'cli_command',
       event_time,
-      logged_in,
-      command,
-      arguments: cleanArgs(args),
+      logged_in: logged_in ? 'yes' : 'no',
+      command: `${command}`,
+      arguments: JSON.stringify(cleanArgs(args)),
       node_version: process.version,
       npm_version: execSync('npm -v').toString().replace('\n', ''),
+      os_platform: os.platform(),
       version,
       exit_code,
       environment: process.env.REDOCLY_ENVIRONMENT,
       environment_ci: process.env.CI,
       raw_input: cleanRawInput(process.argv.slice(2)),
-      has_config,
+      has_config: has_config ? 'yes' : 'no',
       spec_version,
       spec_keyword,
       spec_full_version,
     };
-    await fetch(`https://api.redocly.com/registry/telemetry/cli`, {
-      timeout: DEFAULT_FETCH_TIMEOUT,
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    const { otelTelemetry } = await import('../otel');
+    otelTelemetry.init();
+    otelTelemetry.send(data.command, data);
   } catch (err) {
     // Do nothing.
   }
@@ -602,17 +602,18 @@ export type ExitCode = 0 | 1 | 2;
 export type Analytics = {
   event: string;
   event_time: string;
-  logged_in: boolean;
-  command: string | number;
-  arguments: Record<string, unknown>;
+  logged_in: 'yes' | 'no';
+  command: string;
+  arguments: string;
   node_version: string;
   npm_version: string;
+  os_platform: string;
   version: string;
   exit_code: ExitCode;
   environment?: string;
   environment_ci?: string;
   raw_input: string;
-  has_config?: boolean;
+  has_config?: 'yes' | 'no';
   spec_version?: string;
   spec_keyword?: string;
   spec_full_version?: string;

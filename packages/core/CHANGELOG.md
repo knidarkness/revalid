@@ -1,5 +1,27 @@
 # @redocly/openapi-core
 
+## 1.31.1
+
+## 1.31.0
+
+## 1.30.0
+
+### Patch Changes
+
+- Updated `operation-tag-defined` built-in rule to verify tags are defined on the operation prior to matching them to a global tag.
+
+## 1.29.0
+
+### Minor Changes
+
+- Added the `no-schema-type-mismatch` rule.
+- Added typings and interfaces for Overlay Specification v1.0.0.
+
+### Patch Changes
+
+- Added validation to ensure only Arazzo version 1.0.1 is used, helping users stay on the supported version.
+- Fixed an issue where the `no-invalid-media-type-examples` rule crashed instead of reporting an error when it failed to resolve an example from a $ref.
+
 ## 1.28.5
 
 ## 1.28.4
@@ -14,7 +36,7 @@
 
 ### Patch Changes
 
-- Added support for Arazzo version 1.0.1 in Spot validation rules.
+- Added support for Arazzo version 1.0.1 in Respect validation rules.
 
 ## 1.28.1
 
@@ -55,13 +77,13 @@
 
 ### Patch Changes
 
-- Updated Spot validation rules.
+- Updated Respect validation rules.
 
 ## 1.26.1
 
 ### Patch Changes
 
-- Removed the `no-actions-type-end` Spot rule.
+- Removed the `no-actions-type-end` Respect rule.
 - Removed unused lodash.isequal dependency.
 
 ## 1.26.0
@@ -184,7 +206,7 @@
 
 ### Minor Changes
 
-- Added Spot and Arazzo rules: `no-criteria-xpath`, `no-actions-type-end`, `criteria-unique`.
+- Added Respect and Arazzo rules: `no-criteria-xpath`, `no-actions-type-end`, `criteria-unique`.
 
 ### Patch Changes
 

@@ -1,5 +1,46 @@
 # @redocly/cli
 
+## 1.31.1
+
+### Patch Changes
+
+- Added the missing `respect-core` import in Redocly CLI package.
+- Updated @redocly/openapi-core to v1.31.1.
+
+## 1.31.0
+
+### Minor Changes
+
+- Added the `generate-arazzo` command to scaffold Arazzo description templates out of OpenAPI descriptions.
+- Added the `respect` command to test APIs against Arazzo description files.
+
+### Patch Changes
+
+- Updated @redocly/openapi-core to v1.31.0.
+
+## 1.30.0
+
+### Minor Changes
+
+- Added [OAuth 2.0 Device authorization flow](https://datatracker.ietf.org/doc/html/rfc8628) that enables users to authenticate through Reunite API.
+
+### Patch Changes
+
+- Updated `operation-tag-defined` built-in rule to verify tags are defined on the operation prior to matching them to a global tag.
+- Updated @redocly/openapi-core to v1.30.0.
+
+## 1.29.0
+
+### Minor Changes
+
+- Added typings and interfaces for Overlay Specification v1.0.0.
+
+### Patch Changes
+
+- Fixed a problem where the `split` command produced backslashes instead of forward slashes in `$ref`s on Windows.
+- Fixed an issue where the `no-invalid-media-type-examples` rule crashed instead of reporting an error when it failed to resolve an example from a $ref.
+- Updated @redocly/openapi-core to v1.29.0.
+
 ## 1.28.5
 
 ### Patch Changes
@@ -214,7 +255,7 @@
 
 ### Minor Changes
 
-- Added Spot and Arazzo rules: `no-criteria-xpath`, `no-actions-type-end`, `criteria-unique`.
+- Added Respect and Arazzo rules: `no-criteria-xpath`, `no-actions-type-end`, `criteria-unique`.
 
 ### Patch Changes
 

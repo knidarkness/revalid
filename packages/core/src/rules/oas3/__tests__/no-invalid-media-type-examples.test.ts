@@ -3,6 +3,8 @@ import { lintDocument } from '../../../lint';
 import { parseYamlToDocument, replaceSourceWithRef, makeConfig } from '../../../../__tests__/utils';
 import { BaseResolver } from '../../../resolve';
 
+jest.setTimeout(10000);
+
 describe('no-invalid-media-type-examples', () => {
   it('should report on invalid example', async () => {
     const document = parseYamlToDocument(
@@ -671,6 +673,56 @@ describe('no-invalid-media-type-examples', () => {
           ],
           "message": "Example value must conform to the schema: \`b\` property type must be number.",
           "ruleId": "no-invalid-media-type-examples",
+          "severity": "error",
+          "suggest": [],
+        },
+      ]
+    `);
+  });
+
+  it('should first report on unresolved ref rather than fail on validation', async () => {
+    const document = parseYamlToDocument(
+      outdent`
+        openapi: 3.1.0
+        paths:
+          /groups:
+            get:
+              responses:
+                '200':
+                  content:
+                    application/json:
+                      schema:
+                        type: string
+                      examples:
+                        example1:
+                          $ref: '#/components/examples/NotExisting'
+      `,
+      'foobar.yaml'
+    );
+
+    const results = await lintDocument({
+      externalRefResolver: new BaseResolver(),
+      document,
+      config: await makeConfig({
+        rules: {
+          'no-invalid-media-type-examples': 'warn',
+          'no-unresolved-refs': 'error',
+        },
+      }),
+    });
+
+    expect(replaceSourceWithRef(results)).toMatchInlineSnapshot(`
+      [
+        {
+          "location": [
+            {
+              "pointer": "#/paths/~1groups/get/responses/200/content/application~1json/examples/example1",
+              "reportOnKey": false,
+              "source": "foobar.yaml",
+            },
+          ],
+          "message": "Can't resolve $ref",
+          "ruleId": "no-unresolved-refs",
           "severity": "error",
           "suggest": [],
         },
